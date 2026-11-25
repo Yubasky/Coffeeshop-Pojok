@@ -199,16 +199,24 @@ class AuthController extends BaseController
     public function logout()
     {
         $user = session()->get('user');
+
+        session()->remove('user');
+        session()->remove('last_activity');
+
         if ($user) {
             if (DbHelper::isReady()) {
-                (new LogAktivitasModel())->catat(
-                    isset($user['id']) ? (int) $user['id'] : null,
-                    'LOGOUT',
-                    'pengguna',
-                    isset($user['id']) ? (int) $user['id'] : null,
-                    ['username' => $user['username'] ?? null],
-                    'Logout pengguna ' . ($user['username'] ?? '')
-                );
+                try {
+                    (new LogAktivitasModel())->catat(
+                        isset($user['id']) ? (int) $user['id'] : null,
+                        'LOGOUT',
+                        'pengguna',
+                        isset($user['id']) ? (int) $user['id'] : null,
+                        ['username' => $user['username'] ?? null],
+                        'Logout pengguna ' . ($user['username'] ?? '')
+                    );
+                } catch (\Throwable $e) {
+                    log_message('warning', 'Gagal mencatat log logout: ' . $e->getMessage());
+                }
             } else {
                 MockDataService::addAudit(
                     $user['nama'] . ' / ' . $user['role'],
@@ -217,9 +225,6 @@ class AuthController extends BaseController
                 );
             }
         }
-
-        session()->remove('user');
-        session()->remove('last_activity');
 
         return redirect()->to('/login')->with('success', 'Anda telah keluar dari akun.');
     }

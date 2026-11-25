@@ -35,6 +35,24 @@ class LogAktivitasModel extends Model
         ?array $detail = null,
         ?string $keterangan = null
     ): void {
+        if ($penggunaId !== null) {
+            if ($penggunaId <= 0) {
+                $penggunaId = null;
+            } else {
+                $exists = $this->db->table('pengguna')
+                    ->select('pengguna_id')
+                    ->where('pengguna_id', $penggunaId)
+                    ->get()
+                    ->getRowArray();
+
+                if ($exists === null) {
+                    $detail = $detail ?? [];
+                    $detail['pengguna_id_tidak_ditemukan'] = $penggunaId;
+                    $penggunaId = null;
+                }
+            }
+        }
+
         $this->insert([
             'pengguna_id'  => $penggunaId,
             'jenis_aksi'   => $jenisAksi,

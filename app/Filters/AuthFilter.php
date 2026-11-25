@@ -2,6 +2,8 @@
 
 namespace App\Filters;
 
+use App\Models\PenggunaModel;
+use App\Services\DbHelper;
 use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -25,6 +27,17 @@ class AuthFilter implements FilterInterface
             $session->remove('user');
             $session->remove('last_activity');
             return redirect()->to('/login')->with('error', 'Sesi berakhir karena tidak ada aktivitas selama 30 menit.');
+        }
+
+        if (DbHelper::isReady()) {
+            $user   = $session->get('user');
+            $userId = isset($user['id']) ? (int) $user['id'] : 0;
+
+            if ($userId <= 0 || (new PenggunaModel())->find($userId) === null) {
+                $session->remove('user');
+                $session->remove('last_activity');
+                return redirect()->to('/login')->with('error', 'Sesi tidak valid atau akun sudah tidak ditemukan. Silakan masuk kembali.');
+            }
         }
 
         $session->set('last_activity', time());
