@@ -346,3 +346,121 @@ tr:last-child td { border-bottom: none; }
   }
 }
 
+/* Responsive Auth Page (HP, Tablet, Desktop — tanpa bottom nav) */
+.auth-body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+.auth-topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.auth-topbar-inner {
+  max-width: 1040px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.auth-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 20px 40px;
+}
+.auth-grid {
+  width: 100%;
+  max-width: 980px;
+  display: grid;
+  grid-template-columns: 1fr 1.05fr;
+  gap: 36px;
+  align-items: center;
+}
+.auth-brand-panel {
+  padding: 12px 8px;
+}
+.auth-hero-title {
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1.15;
+  margin: 0 0 12px;
+}
+.auth-hero-desc {
+  color: var(--text-muted);
+  font-size: 14.5px;
+  margin: 0 0 22px;
+}
+.auth-feature-list {
+  display: grid;
+  gap: 10px;
+}
+.auth-feature-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.auth-feature-item strong {
+  color: var(--text);
+  font-size: 13.5px;
+}
+.auth-form-panel {
+  width: 100%;
+  max-width: 460px;
+  margin: 0 auto;
+}
+
+/* Tablet */
+@media (max-width: 900px) {
+  .auth-grid {
+    grid-template-columns: 1fr;
+    max-width: 520px;
+    gap: 20px;
+  }
+  .auth-brand-panel {
+    padding: 0;
+  }
+  .auth-hero-title {
+    font-size: 28px;
+  }
+  .auth-feature-list {
+    display: none;
+  }
+  .auth-form-panel {
+    max-width: 100%;
+  }
+}
+
+/* Mobile / HP */
+@media (max-width: 540px) {
+  .auth-topbar {
+    padding: 14px 16px;
+  }
+  .auth-container {
+    align-items: flex-start;
+    padding: 18px 16px 32px;
+  }
+  .auth-hero-desc {
+    display: none;
+  }
+  .auth-brand-panel {
+    margin-bottom: -8px;
+  }
+  .auth-hero-title {
+    font-size: 24px;
+    margin-bottom: 0;
+  }
+}
+
