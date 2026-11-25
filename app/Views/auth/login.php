@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/mobile') ?>
+<?= $this->extend('layouts/auth') ?>
 
 <?= $this->section('content') ?>
 <?php
@@ -6,8 +6,10 @@ $isDbActive  = ! empty($usingDb);
 $defaultUser = $isDbActive ? 'dewi_l' : 'ayu.pelanggan';
 $defaultPass = $isDbActive ? 'Pojok123!' : 'password123';
 ?>
-<h1 style="font-size:24px; font-weight:800; margin:0 0 4px;">Selamat datang</h1>
-<p style="color:var(--text-muted); margin:0 0 16px;">Pojok UKM Tanjung Gading</p>
+<div style="margin-bottom:16px;">
+    <h2 style="font-size:24px; font-weight:800; margin:0 0 4px;">Selamat datang</h2>
+    <p style="color:var(--text-muted); margin:0;">Masuk atau daftar akun pelanggan untuk melanjutkan</p>
+</div>
 
 <div class="pill-group" style="margin-bottom:16px;">
     <button type="button" id="tab-masuk" class="pill <?= ($mode ?? 'login') === 'login' ? 'active' : '' ?>" onclick="switchAuthTab('masuk')">Masuk</button>
