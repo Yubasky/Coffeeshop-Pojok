@@ -11,10 +11,13 @@
 </head>
 <body>
 <header class="staff-topbar">
-    <div>
-        <div class="brand-title">POJOK UKM TANJUNG GADING</div>
-        <div style="font-size:12.5px; color:var(--text-muted);">
-            <?= esc($staffSubtitle ?? 'Operasional Kedai · 19 Nov 2026') ?>
+    <div class="brand-lockup">
+        <img class="brand-logo" src="<?= base_url('assets/logo-pojok-ukm.png') ?>" alt="Logo Pojok UKM">
+        <div>
+            <div class="brand-title">POJOK UKM TANJUNG GADING</div>
+            <div style="font-size:12.5px; color:var(--text-muted);">
+                <?= esc($staffSubtitle ?? 'Operasional Kedai · 19 Nov 2026') ?>
+            </div>
         </div>
     </div>
     <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">

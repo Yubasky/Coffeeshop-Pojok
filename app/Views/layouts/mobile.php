@@ -13,7 +13,10 @@
 <div class="mobile-wrapper">
     <div class="mobile-shell">
         <header class="mobile-topbar">
-            <div class="brand-title">POJOK UKM</div>
+            <div class="brand-lockup">
+                <img class="brand-logo" src="<?= base_url('assets/logo-pojok-ukm.png') ?>" alt="Logo Pojok UKM">
+                <div class="brand-title">POJOK UKM</div>
+            </div>
             <div style="display:flex; align-items:center; gap:8px;">
                 <span style="font-size:13px; color:var(--text-muted); font-weight:500;">
                     <?= esc($topbarRight ?? 'Tanjung Gading') ?>
