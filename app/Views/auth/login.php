@@ -1,6 +1,11 @@
 <?= $this->extend('layouts/mobile') ?>
 
 <?= $this->section('content') ?>
+<?php
+$isDbActive  = ! empty($usingDb);
+$defaultUser = $isDbActive ? 'dewi_l' : 'ayu.pelanggan';
+$defaultPass = $isDbActive ? 'Pojok123!' : 'password123';
+?>
 <h1 style="font-size:24px; font-weight:800; margin:0 0 4px;">Selamat datang</h1>
 <p style="color:var(--text-muted); margin:0 0 16px;">Pojok UKM Tanjung Gading</p>
 
@@ -15,21 +20,21 @@
         <?= csrf_field() ?>
         <div class="form-group">
             <label class="form-label" for="login-username">Username</label>
-            <input type="text" id="login-username" name="username" class="input" placeholder="Masukkan username" value="ayu.pelanggan">
+            <input type="text" id="login-username" name="username" class="input" placeholder="Masukkan username" value="<?= esc(old('username') ?: $defaultUser) ?>" required>
         </div>
         <div class="form-group">
             <label class="form-label" for="login-password">Password</label>
-            <input type="password" id="login-password" name="password" class="input" placeholder="••••••••" value="password123">
+            <input type="password" id="login-password" name="password" class="input" placeholder="••••••••" value="<?= esc($defaultPass) ?>" required>
         </div>
 
         <div class="form-group">
-            <label class="form-label">Pilih Peran (Demo Tanpa DB)</label>
+            <label class="form-label"><?= $isDbActive ? 'Pilih Akun Uji (PostgreSQL Seeder)' : 'Pilih Peran (Demo Tanpa DB)' ?></label>
             <input type="hidden" name="role" id="selected-role" value="pelanggan">
             <div class="pill-group">
-                <button type="button" class="pill role-pill active" data-role="pelanggan" data-user="ayu.pelanggan" onclick="selectRole(this)">Pelanggan</button>
-                <button type="button" class="pill role-pill" data-role="kasir" data-user="rina.kasir" onclick="selectRole(this)">Kasir</button>
-                <button type="button" class="pill role-pill" data-role="barista" data-user="adi.barista" onclick="selectRole(this)">Barista</button>
-                <button type="button" class="pill role-pill" data-role="owner" data-user="maya.owner" onclick="selectRole(this)">Owner</button>
+                <button type="button" class="pill role-pill active" data-role="pelanggan" data-user="<?= $isDbActive ? 'dewi_l' : 'ayu.pelanggan' ?>" onclick="selectRole(this)">Pelanggan</button>
+                <button type="button" class="pill role-pill" data-role="kasir" data-user="<?= $isDbActive ? 'kasir_siti' : 'rina.kasir' ?>" onclick="selectRole(this)">Kasir</button>
+                <button type="button" class="pill role-pill" data-role="barista" data-user="<?= $isDbActive ? 'barista_andi' : 'adi.barista' ?>" onclick="selectRole(this)">Barista</button>
+                <button type="button" class="pill role-pill" data-role="owner" data-user="<?= $isDbActive ? 'owner_budi' : 'maya.owner' ?>" onclick="selectRole(this)">Owner</button>
             </div>
         </div>
 
@@ -81,4 +86,3 @@ function selectRole(btn) {
 }
 </script>
 <?= $this->endSection() ?>
-

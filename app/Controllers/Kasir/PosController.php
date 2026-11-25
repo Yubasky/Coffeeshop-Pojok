@@ -3,6 +3,9 @@
 namespace App\Controllers\Kasir;
 
 use App\Controllers\BaseController;
+use App\Models\MenuModel;
+use App\Models\ShiftModel;
+use App\Services\DbHelper;
 use App\Services\MockDataService;
 
 class PosController extends BaseController
@@ -15,7 +18,7 @@ class PosController extends BaseController
         $statusFilter = (string) ($this->request->getGet('status') ?? 'Semua');
         $search       = trim((string) $this->request->getGet('q'));
 
-        $allOrders = MockDataService::getOrders();
+        $allOrders    = MockDataService::getOrders();
         $onlineCount  = count(array_filter($allOrders, static fn($o) => $o['kanal'] === 'Online'));
         $offlineCount = count(array_filter($allOrders, static fn($o) => $o['kanal'] === 'Offline'));
 
@@ -35,11 +38,36 @@ class PosController extends BaseController
             return true;
         });
 
-        $menus = array_filter(MockDataService::getMenus(), static fn($m) => $m['aktif']);
+        if (DbHelper::isReady()) {
+            $activeShift = (new ShiftModel())->getActiveShift();
+            $shift       = $activeShift ? [
+                'aktif' => true,
+                'jenis' => $activeShift['jenis_shift'],
+                'kasir' => $activeShift['nama_kasir_pembuka'] ?? '-',
+            ] : [
+                'aktif' => false,
+                'jenis' => 'PAGI',
+                'kasir' => '-',
+            ];
+
+            $menuRows = (new MenuModel())->filterMenus(true, 'SEMUA', '');
+            $menus    = array_slice(array_map(static function (array $m): array {
+                return [
+                    'id'       => (int) $m['menu_id'],
+                    'nama'     => $m['nama'],
+                    'kategori' => $m['kategori'],
+                    'harga'    => (int) $m['harga'],
+                    'aktif'    => true,
+                ];
+            }, $menuRows), 0, 8);
+        } else {
+            $shift = MockDataService::getShift();
+            $menus = array_slice(array_values(array_filter(MockDataService::getMenus(), static fn($m) => $m['aktif'])), 0, 8);
+        }
 
         return view('kasir/pos', [
             'title'        => 'POS & Antrean Kasir — Pojok UKM Tanjung Gading',
-            'shift'        => MockDataService::getShift(),
+            'shift'        => $shift,
             'orders'       => array_values($orders),
             'totalOrders'  => count($allOrders),
             'onlineCount'  => $onlineCount,
@@ -47,7 +75,7 @@ class PosController extends BaseController
             'kanalFilter'  => $kanalFilter,
             'statusFilter' => $statusFilter,
             'search'       => $search,
-            'menus'        => array_slice(array_values($menus), 0, 8),
+            'menus'        => $menus,
         ]);
     }
 

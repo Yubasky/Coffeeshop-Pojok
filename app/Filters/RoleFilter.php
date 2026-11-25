@@ -2,6 +2,8 @@
 
 namespace App\Filters;
 
+use App\Models\LogAktivitasModel;
+use App\Services\DbHelper;
 use App\Services\MockDataService;
 use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\RequestInterface;
@@ -9,7 +11,7 @@ use CodeIgniter\HTTP\ResponseInterface;
 
 /**
  * RoleFilter: Proteksi RBAC lintas peran. Menolak akses tidak sah dengan HTTP 403
- * dan mencatat kejadian ke log aktivitas (mock audit).
+ * dan mencatat kejadian ke log_aktivitas.
  */
 class RoleFilter implements FilterInterface
 {
@@ -22,11 +24,24 @@ class RoleFilter implements FilterInterface
 
         $allowedRoles = $arguments ?? [];
         if (! empty($allowedRoles) && ! in_array($user['role'], $allowedRoles, true)) {
-            MockDataService::addAudit(
-                $user['nama'] . ' / ' . $user['role'],
-                'Akses Ditolak (HTTP 403)',
-                '/' . ltrim($request->getPath(), '/')
-            );
+            $path = '/' . ltrim($request->getPath(), '/');
+
+            if (DbHelper::isReady()) {
+                (new LogAktivitasModel())->catat(
+                    isset($user['id']) ? (int) $user['id'] : null,
+                    'AKSES_DITOLAK',
+                    'halaman',
+                    null,
+                    ['url' => $path, 'peran' => $user['role'], 'allowed' => $allowedRoles],
+                    'Percobaan akses ditolak (HTTP 403) ke ' . $path . ' oleh ' . $user['role']
+                );
+            } else {
+                MockDataService::addAudit(
+                    $user['nama'] . ' / ' . $user['role'],
+                    'Akses Ditolak (HTTP 403)',
+                    $path
+                );
+            }
 
             return service('response')
                 ->setStatusCode(403)
@@ -42,4 +57,3 @@ class RoleFilter implements FilterInterface
         // No-op
     }
 }
-

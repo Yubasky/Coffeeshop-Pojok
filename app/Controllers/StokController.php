@@ -2,16 +2,37 @@
 
 namespace App\Controllers;
 
+use App\Models\BahanBakuModel;
+use App\Models\RiwayatStokModel;
+use App\Services\DbHelper;
 use App\Services\MockDataService;
+use App\Services\StokService;
+use Throwable;
 
 class StokController extends BaseController
 {
     public function index()
     {
-        MockDataService::initSession();
+        $search  = trim((string) $this->request->getGet('q'));
+        $tab     = (string) ($this->request->getGet('tab') ?? 'daftar');
+        $user    = session()->get('user');
+        $isOwner = ($user['role'] ?? '') === 'OWNER';
 
-        $search = trim((string) $this->request->getGet('q'));
-        $tab    = (string) ($this->request->getGet('tab') ?? 'daftar');
+        if (DbHelper::isReady()) {
+            [$bahan, $mutasi] = $this->loadFromDatabase($search);
+
+            return view('stok/index', [
+                'title'     => 'Stok Bahan Baku — Pojok UKM Tanjung Gading',
+                'activeNav' => 'stok',
+                'isOwner'   => $isOwner,
+                'bahan'     => $bahan,
+                'mutasi'    => $mutasi,
+                'search'    => $search,
+                'tab'       => $tab,
+            ]);
+        }
+
+        MockDataService::initSession();
 
         $bahan = array_filter(MockDataService::getBahan(), static function ($b) use ($search) {
             if ($search !== '' && stripos($b['nama'], $search) === false) {
@@ -19,9 +40,6 @@ class StokController extends BaseController
             }
             return true;
         });
-
-        $user = session()->get('user');
-        $isOwner = ($user['role'] ?? '') === 'OWNER';
 
         return view('stok/index', [
             'title'     => 'Stok Bahan Baku — Pojok UKM Tanjung Gading',
@@ -34,22 +52,57 @@ class StokController extends BaseController
         ]);
     }
 
+    public function riwayat()
+    {
+        $user    = session()->get('user');
+        $isOwner = ($user['role'] ?? '') === 'OWNER';
+
+        if (DbHelper::isReady()) {
+            [, $mutasi] = $this->loadFromDatabase('');
+        } else {
+            MockDataService::initSession();
+            $mutasi = MockDataService::getMutasi();
+        }
+
+        return view('stok/riwayat', [
+            'title'     => 'Riwayat Mutasi Stok — Pojok UKM Tanjung Gading',
+            'activeNav' => 'stok',
+            'isOwner'   => $isOwner,
+            'mutasi'    => $mutasi,
+        ]);
+    }
+
     public function store()
     {
-        MockDataService::initSession();
-
         $nama    = trim((string) $this->request->getPost('nama'));
         $stok    = (float) $this->request->getPost('stok');
         $minimum = (float) $this->request->getPost('minimum');
         $satuan  = trim((string) ($this->request->getPost('satuan') ?? 'pcs'));
 
-        if ($nama === '' || $stok < 0) {
-            return redirect()->back()->with('error', 'Nama bahan dan jumlah stok awal wajib diisi.');
+        if ($nama === '' || $stok <= 0) {
+            return redirect()->back()->with('error', 'Nama bahan dan jumlah stok awal (> 0) wajib diisi.');
         }
 
+        if (DbHelper::isReady()) {
+            $user = session()->get('user');
+            try {
+                (new StokService())->tambahBahanBakuDenganStokAwal(
+                    $nama,
+                    $satuan,
+                    $stok,
+                    (int) ($user['id'] ?? 1)
+                );
+            } catch (Throwable $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
+
+            return redirect()->to('/stok')->with('success', 'Bahan baku "' . $nama . '" ditambahkan beserta pencatatan STOK_AWAL.');
+        }
+
+        MockDataService::initSession();
         $status = $stok <= 0 ? 'Kritis' : ($stok < $minimum ? 'Menipis' : 'Aman');
 
-        $bahan = MockDataService::getBahan();
+        $bahan   = MockDataService::getBahan();
         $bahan[] = [
             'id'      => count($bahan) + 1,
             'nama'    => $nama,
@@ -60,7 +113,7 @@ class StokController extends BaseController
         ];
         session()->set('mock_bahan', $bahan);
 
-        $user = session()->get('user');
+        $user   = session()->get('user');
         $mutasi = MockDataService::getMutasi();
         array_unshift($mutasi, [
             'waktu'      => date('d M · H.i') . ' WIB',
@@ -77,28 +130,43 @@ class StokController extends BaseController
 
     public function koreksi(int $id)
     {
-        MockDataService::initSession();
         $delta = (float) $this->request->getPost('delta');
 
-        $bahan = MockDataService::getBahan();
+        if (DbHelper::isReady()) {
+            $user = session()->get('user');
+            try {
+                $hasil = (new StokService())->sesuaikanStok(
+                    $id,
+                    $delta,
+                    (int) ($user['id'] ?? 1)
+                );
+            } catch (Throwable $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
+
+            return redirect()->to('/stok')->with('success', 'Stok "' . $hasil['nama'] . '" berhasil dikoreksi.');
+        }
+
+        MockDataService::initSession();
+        $bahan     = MockDataService::getBahan();
         $namaBahan = '';
-        $satuan = '';
+        $satuan    = '';
         foreach ($bahan as &$b) {
             if ($b['id'] === $id) {
-                $b['stok'] = max(0, $b['stok'] + $delta);
+                $b['stok']   = max(0, $b['stok'] + $delta);
                 $b['status'] = $b['stok'] <= ($b['minimum'] * 0.4)
                     ? 'Kritis'
                     : ($b['stok'] < $b['minimum'] ? 'Menipis' : 'Aman');
-                $namaBahan = $b['nama'];
-                $satuan    = $b['satuan'];
+                $namaBahan   = $b['nama'];
+                $satuan      = $b['satuan'];
                 break;
             }
         }
         unset($b);
         session()->set('mock_bahan', $bahan);
 
-        $user = session()->get('user');
-        $sign = $delta >= 0 ? '+' : '';
+        $user   = session()->get('user');
+        $sign   = $delta >= 0 ? '+' : '';
         $mutasi = MockDataService::getMutasi();
         array_unshift($mutasi, [
             'waktu'      => date('d M · H.i') . ' WIB',
@@ -110,5 +178,42 @@ class StokController extends BaseController
 
         return redirect()->to('/stok')->with('success', 'Stok "' . $namaBahan . '" berhasil dikoreksi.');
     }
-}
 
+    private function loadFromDatabase(string $search): array
+    {
+        $bahanModel = new BahanBakuModel();
+        if ($search !== '') {
+            $bahanModel->where('nama ILIKE', '%' . $search . '%');
+        }
+        $bahanRows = $bahanModel->orderBy('bahan_baku_id', 'ASC')->findAll();
+
+        $bahan = array_map(static function (array $b): array {
+            $stok    = (float) $b['stok_terkini'];
+            $minimum = $b['satuan'] === 'pcs' ? 100.0 : 500.0;
+            $status  = $stok <= ($minimum * 0.4) ? 'Kritis' : ($stok < $minimum ? 'Menipis' : 'Aman');
+
+            return [
+                'id'      => (int) $b['bahan_baku_id'],
+                'nama'    => $b['nama'],
+                'stok'    => $stok,
+                'minimum' => $minimum,
+                'satuan'  => $b['satuan'],
+                'status'  => $status,
+            ];
+        }, $bahanRows);
+
+        $mutasiRows = (new RiwayatStokModel())->getMutasiTerbaru(25);
+        $mutasi     = array_map(static function (array $m): array {
+            $delta = (float) $m['jumlah_perubahan'];
+            $sign  = $delta > 0 ? '+' : '';
+            return [
+                'waktu'      => date('d M · H.i', strtotime((string) $m['waktu_dibuat'])) . ' WIB',
+                'keterangan' => ($m['nama_bahan'] ?? '-') . ' ' . $sign . $delta . ' ' . ($m['satuan'] ?? ''),
+                'sumber'     => $m['jenis_perubahan'] . ($m['keterangan'] ? ' · ' . $m['keterangan'] : ''),
+                'pelaku'     => $m['nama_pengguna'] ?? 'Sistem',
+            ];
+        }, $mutasiRows);
+
+        return [$bahan, $mutasi];
+    }
+}

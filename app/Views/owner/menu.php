@@ -39,7 +39,7 @@
 <!-- Filter & Search -->
 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
     <div class="pill-group">
-        <a href="<?= site_url('owner/menu?kategori=SEMUA&q=' . urlencode($search)) ?>" class="pill <?= $kategori === 'SEMUA' ? 'active' : '' ?>">Semua (22)</a>
+        <a href="<?= site_url('owner/menu?kategori=SEMUA&q=' . urlencode($search)) ?>" class="pill <?= $kategori === 'SEMUA' ? 'active' : '' ?>">Semua (<?= esc($totalAllMenus ?? count($menus)) ?>)</a>
         <a href="<?= site_url('owner/menu?kategori=KOPI&q=' . urlencode($search)) ?>" class="pill <?= $kategori === 'KOPI' ? 'active' : '' ?>">Kopi</a>
         <a href="<?= site_url('owner/menu?kategori=NON_KOPI&q=' . urlencode($search)) ?>" class="pill <?= $kategori === 'NON_KOPI' ? 'active' : '' ?>">Non-Kopi</a>
     </div>

@@ -32,6 +32,7 @@ $routes->group('kasir', ['filter' => ['auth', 'role:KASIR']], static function ($
     $routes->post('pembayaran/(:num)/kirim-barista', 'Kasir\PembayaranController::kirimBarista/$1');
     $routes->post('pembayaran/(:num)/update-pelanggan', 'Kasir\PembayaranController::updatePelanggan/$1');
     $routes->post('pembayaran/(:num)/batal', 'Kasir\PembayaranController::batal/$1');
+    $routes->get('shift', 'Kasir\ShiftController::index');
     $routes->post('shift/toggle', 'Kasir\ShiftController::toggle');
 });
 
@@ -45,6 +46,7 @@ $routes->group('barista', ['filter' => ['auth', 'role:BARISTA']], static functio
 // Stok Bahan Baku (Owner & Barista: FR-16 - FR-18)
 $routes->group('stok', ['filter' => ['auth', 'role:OWNER,BARISTA']], static function ($routes) {
     $routes->get('/', 'StokController::index');
+    $routes->get('riwayat', 'StokController::riwayat');
     $routes->post('tambah', 'StokController::store');
     $routes->post('koreksi/(:num)', 'StokController::koreksi/$1');
 });
@@ -60,4 +62,5 @@ $routes->group('owner', ['filter' => ['auth', 'role:OWNER']], static function ($
     $routes->post('pengguna/tambah', 'Owner\PenggunaController::store');
     $routes->post('pengguna/(:num)/toggle', 'Owner\PenggunaController::toggleStatus/$1');
     $routes->post('pengguna/(:num)/reset-password', 'Owner\PenggunaController::resetPassword/$1');
+    $routes->get('audit', 'Owner\AuditController::index');
 });

@@ -37,11 +37,24 @@
                 <a href="<?= site_url('owner/menu') ?>" class="owner-nav-link <?= $activeNav === 'menu' ? 'active' : '' ?>">Katalog Menu</a>
                 <a href="<?= site_url('stok') ?>" class="owner-nav-link <?= $activeNav === 'stok' ? 'active' : '' ?>">Stok Bahan Baku</a>
                 <a href="<?= site_url('owner/pengguna') ?>" class="owner-nav-link <?= $activeNav === 'pengguna' ? 'active' : '' ?>">Staf &amp; Riwayat</a>
+                <a href="<?= site_url('owner/audit') ?>" class="owner-nav-link <?= $activeNav === 'audit' ? 'active' : '' ?>">Audit Log</a>
             </nav>
         </div>
 
         <div style="margin-top:24px;">
-            <?php $shift = \App\Services\MockDataService::getShift(); ?>
+            <?php
+            if (\App\Services\DbHelper::isReady()) {
+                $activeShift = (new \App\Models\ShiftModel())->getActiveShift();
+                $shift       = [
+                    'jenis'   => $activeShift['jenis_shift'] ?? 'Tutup',
+                    'jam'     => $activeShift ? (($activeShift['jenis_shift'] === 'PAGI') ? '08.00–15.00 WIB' : '15.00–22.00 WIB') : 'Belum ada shift aktif',
+                    'kasir'   => $activeShift['nama_kasir_pembuka'] ?? '-',
+                    'barista' => 'Aktif',
+                ];
+            } else {
+                $shift = \App\Services\MockDataService::getShift();
+            }
+            ?>
             <div class="card" style="background:var(--surface-muted); padding:12px 14px; margin-bottom:12px;">
                 <div style="font-weight:700; font-size:13px;">Shift <?= esc(ucfirst(strtolower($shift['jenis'] ?? 'Pagi'))) ?></div>
                 <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">
